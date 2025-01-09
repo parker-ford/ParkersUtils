@@ -1,0 +1,12 @@
+
+#pragma kernel CS_Blit
+
+Texture2D<float4> _Source;
+RWTexture2D<float4> _Target;
+
+[numthreads(8,8,1)]
+void CS_Blit (uint3 id : SV_DispatchThreadID)
+{
+    _Target[id.xy] = _Source[id.xy];
+    // _Target[id.xy] = float4(1.0, 0.0, 0.0, 1.0);
+}
