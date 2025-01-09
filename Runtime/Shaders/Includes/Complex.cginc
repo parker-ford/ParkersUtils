@@ -13,7 +13,7 @@ Complex ComplexSub(Complex a, Complex b) {
     return Complex(a.real - b.real, a.imag - b.imag);
 }
 
-Complex ComplexMul(Complex a, Complex b) {
+Complex ComplexMult(Complex a, Complex b) {
     return Complex(
         a.real * b.real - a.imag * b.imag,
         a.real * b.imag + a.imag * b.real

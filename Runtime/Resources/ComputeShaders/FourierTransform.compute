@@ -1,9 +1,8 @@
 #include "Packages/com.parker.utilities/Runtime/Shaders/Includes/Complex.cginc"
+#include "Packages/com.parker.utilities/Runtime/Shaders/Includes/ShaderUtils.cginc"
 
 #pragma kernel CS_FFT
 #pragma kernel CS_DFT
-
-RWTexture2D<Complex> _Target;
 
 #pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024
 #if defined(FFT_SIZE_1024)
@@ -29,16 +28,40 @@ RWTexture2D<Complex> _Target;
 #define LOG_SIZE 6
 #endif
 
+// groupshared float4 fftGroupBuffer[2][SIZE];
+groupshared Complex dftGroupBuffer[SIZE];
 
+RWTexture2D<Complex> _Target;
+bool _Direction;
+bool _Inverse;
 
+float2 DFT(uint threadIndex, Complex input){
+    dftGroupBuffer[threadIndex] = input;
+    GroupMemoryBarrierWithGroupSync();
 
-[numthreads(8,8,1)]
-void CS_DFT (uint3 id : SV_DispatchThreadID)
-{
-    
+    Complex fn = 0;
+    for(uint k = 0; k < SIZE; k++){
+
+        float theta = TWO_PI * float(threadIndex * k) / float(SIZE);
+        Complex w = Complex(cos(theta), -sin(theta));
+
+        Complex fk = dftGroupBuffer[k];
+        fn += ComplexMult(fk, w);
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+    return fn;
 }
 
-[numthreads(8,8,1)]
+[numthreads(SIZE, 1, 1)]
+void CS_DFT (uint3 id : SV_DispatchThreadID)
+{
+    uint threadIndex = id.x;
+    uint2 targetIndex = _Direction ? id.yx : id.xy;
+    _Target[targetIndex] = DFT(threadIndex, _Target[targetIndex]);
+}
+
+[numthreads(SIZE, 1, 1)]
 void CS_FFT (uint3 id : SV_DispatchThreadID)
 {
     

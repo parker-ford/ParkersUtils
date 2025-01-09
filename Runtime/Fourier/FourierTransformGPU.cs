@@ -22,7 +22,7 @@ namespace ParkersUtils
 
             KERNEL_FFT = _computeShader.FindKernel("CS_FFT");
             KERNEL_DFT = _computeShader.FindKernel("CS_DFT");
-            
+
             // KERNEL_SPLIT_RGB = _computeShader.FindKernel("CS_SplitRGB");
             // KERNEL_CENTER_SHIFT = _computeShader.FindKernel("CS_ShiftToCenter");
             // KERNEL_MAGNITUDE_RGB = _computeShader.FindKernel("CS_RGBToMagnitude");
@@ -101,6 +101,15 @@ namespace ParkersUtils
             _computeShader.Dispatch(KERNEL_FFT, 1, size, 1);
         }
 
+        private static void ProcessDFT(RenderTexture target, bool direction, bool inverse)
+        {
+            int size = target.width;
+            _computeShader.SetTexture(KERNEL_DFT, "_Target", target);
+            _computeShader.SetBool("_Direction", direction);
+            _computeShader.SetBool("_Inverse", inverse);
+            _computeShader.Dispatch(KERNEL_DFT, 1, size, 1);
+        }
+
         public static void FFT(RenderTexture target, bool inverse)
         {
             ClearComputeShaderVariables();
@@ -113,6 +122,20 @@ namespace ParkersUtils
             // Order of direction dependent on if inverse
             ProcessFFT(target, inverse ? false : true, inverse);
             ProcessFFT(target, inverse ? true : false, inverse);
+        }
+
+        public static void DFT(RenderTexture target, bool inverse)
+        {
+            ClearComputeShaderVariables();
+
+            if (!ValidateTexture(target)) return;
+
+            int size = target.width;
+            if (!SetTextureSize(size)) return;
+
+            // Order of direction dependent on if inverse
+            ProcessDFT(target, inverse ? false : true, inverse);
+            ProcessDFT(target, inverse ? true : false, inverse);
         }
     }
 }
