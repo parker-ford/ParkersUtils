@@ -55,7 +55,7 @@ namespace ParkersUtils
 
         public void Forward(RenderTexture target)
         {
-
+            FourierTransformGPU.DFT(target, false);
         }
 
         public void Inverse(RenderTexture target)

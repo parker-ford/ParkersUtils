@@ -1,0 +1,35 @@
+#pragma kernel CS_SplitR
+#pragma kernel CS_SplitG
+#pragma kernel CS_SplitB
+#pragma kernel CS_SplitRBG
+
+Texture2D<float4> _Source;
+RWTexture2D<float> _RedChannel;
+RWTexture2D<float> _GreenChannel;
+RWTexture2D<float> _BlueChannel;
+
+[numthreads(8,8,1)]
+void CS_SplitR (uint3 id : SV_DispatchThreadID)
+{
+    _RedChannel[id.xy] = _Source[id.xy].r;
+}
+
+[numthreads(8,8,1)]
+void CS_SplitG (uint3 id : SV_DispatchThreadID)
+{
+    _GreenChannel[id.xy] = _Source[id.xy].g;
+}
+
+[numthreads(8,8,1)]
+void CS_SplitB (uint3 id : SV_DispatchThreadID)
+{
+    _BlueChannel[id.xy] = _Source[id.xy].b;
+}
+
+[numthreads(8,8,1)]
+void CS_SplitRBG (uint3 id : SV_DispatchThreadID)
+{
+    _RedChannel[id.xy] = _Source[id.xy].r;
+    _GreenChannel[id.xy] = _Source[id.xy].g;
+    _BlueChannel[id.xy] = _Source[id.xy].b;
+}
