@@ -1,0 +1,45 @@
+#include "Packages/com.parker.utilities/Runtime/Shaders/Includes/Complex.cginc"
+
+#pragma kernel CS_FFT
+#pragma kernel CS_DFT
+
+RWTexture2D<Complex> _Target;
+
+#pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024
+#if defined(FFT_SIZE_1024)
+#define SIZE 1024
+#define LOG_SIZE 10
+#elif defined(FFT_SIZE_512)
+#define SIZE 512
+#define LOG_SIZE 9
+#elif defined(FFT_SIZE_256)
+#define SIZE 256
+#define LOG_SIZE 8
+#elif defined(FFT_SIZE_128)
+#define SIZE 128
+#define LOG_SIZE 7
+#elif defined(FFT_SIZE_64)
+#define SIZE 64
+#define LOG_SIZE 6
+#elif defined(FFT_SIZE_16)
+#define SIZE 16
+#define LOG_SIZE 4
+#else
+#define SIZE 64
+#define LOG_SIZE 6
+#endif
+
+
+
+
+[numthreads(8,8,1)]
+void CS_DFT (uint3 id : SV_DispatchThreadID)
+{
+    
+}
+
+[numthreads(8,8,1)]
+void CS_FFT (uint3 id : SV_DispatchThreadID)
+{
+    
+}
