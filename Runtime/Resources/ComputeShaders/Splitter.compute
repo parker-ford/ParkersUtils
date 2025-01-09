@@ -1,35 +1,39 @@
 #pragma kernel CS_SplitR
 #pragma kernel CS_SplitG
 #pragma kernel CS_SplitB
-#pragma kernel CS_SplitRBG
+#pragma kernel CS_SplitRGB
 
 Texture2D<float4> _Source;
-RWTexture2D<float> _RedChannel;
-RWTexture2D<float> _GreenChannel;
-RWTexture2D<float> _BlueChannel;
+RWTexture2D<float4> _RedChannel;
+RWTexture2D<float4> _GreenChannel;
+RWTexture2D<float4> _BlueChannel;
 
 [numthreads(8,8,1)]
 void CS_SplitR (uint3 id : SV_DispatchThreadID)
 {
-    _RedChannel[id.xy] = _Source[id.xy].r;
+    float4 sample = _Source[id.xy];
+    _RedChannel[id.xy] = float4(sample.r, 0, 0, 0);
 }
 
 [numthreads(8,8,1)]
 void CS_SplitG (uint3 id : SV_DispatchThreadID)
 {
-    _GreenChannel[id.xy] = _Source[id.xy].g;
+    float4 sample = _Source[id.xy];
+    _GreenChannel[id.xy] = float4(sample.g, 0, 0, 0);
 }
 
 [numthreads(8,8,1)]
 void CS_SplitB (uint3 id : SV_DispatchThreadID)
 {
-    _BlueChannel[id.xy] = _Source[id.xy].b;
+    float4 sample = _Source[id.xy];
+    _BlueChannel[id.xy] = float4(sample.b, 0, 0, 0);
 }
 
 [numthreads(8,8,1)]
-void CS_SplitRBG (uint3 id : SV_DispatchThreadID)
+void CS_SplitRGB (uint3 id : SV_DispatchThreadID)
 {
-    _RedChannel[id.xy] = _Source[id.xy].r;
-    _GreenChannel[id.xy] = _Source[id.xy].g;
-    _BlueChannel[id.xy] = _Source[id.xy].b;
+    float4 sample = _Source[id.xy];
+    _RedChannel[id.xy] = float4(sample.r, 0, 0, 0);
+    _GreenChannel[id.xy] = float4(sample.g, 0, 0, 0);
+    _BlueChannel[id.xy] = float4(sample.b, 0, 0, 0);
 }

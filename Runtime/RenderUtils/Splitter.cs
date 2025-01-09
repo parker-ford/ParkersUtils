@@ -17,7 +17,13 @@ namespace ParkersUtils
 
         private static bool InitilazeSplitter()
         {
-            _splitterComputeShader = Resources.Load<ComputeShader>("Splitter");
+            _splitterComputeShader = Resources.Load<ComputeShader>("ComputeShaders/Splitter");
+            if (_splitterComputeShader == null)
+            {
+                Debug.LogError("Failed to load Splitter compute shader");
+                return false;
+            }
+
             KERNEL_SPLIT_R = _splitterComputeShader.FindKernel("CS_SplitR");
             KERNEL_SPLIT_G = _splitterComputeShader.FindKernel("CS_SplitG");
             KERNEL_SPLIT_B = _splitterComputeShader.FindKernel("CS_SplitB");

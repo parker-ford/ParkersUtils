@@ -1,5 +1,3 @@
-
-
 using UnityEngine;
 
 namespace ParkersUtils
@@ -8,26 +6,19 @@ namespace ParkersUtils
     {
         private static ComputeShader _computeShader;
 
-        // private static readonly int KERNEL_SPLIT_RGB;
         private static readonly int KERNEL_FFT;
         private static readonly int KERNEL_DFT;
-        // private static readonly int KERNEL_CENTER_SHIFT;
-        // private static readonly int KERNEL_MAGNITUDE_RGB;
-        // private static readonly int KERNEL_LOG_SCALE;
-        // private static readonly int KERNEL_LINEAR_SCALE;
+        private static readonly int KERNEL_INVERSE_SCALE;
+        private static readonly int KERNEL_FREQUENCY_SHIFT;
 
         static FourierTransformGPU()
         {
-            _computeShader = Resources.Load<ComputeShader>("FourierTransform");
+            _computeShader = Resources.Load<ComputeShader>("ComputeShaders/FourierTransform");
 
             KERNEL_FFT = _computeShader.FindKernel("CS_FFT");
             KERNEL_DFT = _computeShader.FindKernel("CS_DFT");
-
-            // KERNEL_SPLIT_RGB = _computeShader.FindKernel("CS_SplitRGB");
-            // KERNEL_CENTER_SHIFT = _computeShader.FindKernel("CS_ShiftToCenter");
-            // KERNEL_MAGNITUDE_RGB = _computeShader.FindKernel("CS_RGBToMagnitude");
-            // KERNEL_LOG_SCALE = _computeShader.FindKernel("CS_LogScale");
-            // KERNEL_LINEAR_SCALE = _computeShader.FindKernel("CS_LinearScale");
+            KERNEL_INVERSE_SCALE = _computeShader.FindKernel("CS_InverseScale");
+            KERNEL_FREQUENCY_SHIFT = _computeShader.FindKernel("CS_FrequencyShift");
         }
 
         private static void ClearComputeShaderVariables()
@@ -136,6 +127,32 @@ namespace ParkersUtils
             // Order of direction dependent on if inverse
             ProcessDFT(target, inverse ? false : true, inverse);
             ProcessDFT(target, inverse ? true : false, inverse);
+        }
+
+        public static void InverseScale(RenderTexture target)
+        {
+            ClearComputeShaderVariables();
+
+            if (!ValidateTexture(target)) return;
+
+            int size = target.width;
+            if (!SetTextureSize(size)) return;
+
+            _computeShader.SetTexture(KERNEL_INVERSE_SCALE, "_Target", target);
+            _computeShader.Dispatch(KERNEL_INVERSE_SCALE, size / 8, size / 8, 1);
+        }
+
+        public static void FrequencyShift(RenderTexture target)
+        {
+            ClearComputeShaderVariables();
+
+            if (!ValidateTexture(target)) return;
+
+            int size = target.width;
+            if (!SetTextureSize(size)) return;
+
+            _computeShader.SetTexture(KERNEL_FREQUENCY_SHIFT, "_Target", target);
+            _computeShader.Dispatch(KERNEL_FREQUENCY_SHIFT, size / 8, size / 8, 1);
         }
     }
 }

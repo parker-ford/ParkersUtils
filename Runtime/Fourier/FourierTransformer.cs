@@ -7,9 +7,10 @@ namespace ParkersUtils
     public enum FourierTransformerScaling
     {
         None = 0,
+        Inverse = 1
     };
 
-    public enum FourierTransformerShifting
+    public enum FourierTransformerShift
     {
         None = 0,
         Centered = 1
@@ -24,16 +25,16 @@ namespace ParkersUtils
     public readonly struct FourierTransformerSettings
     {
         public FourierTransformerScaling Scaling { get; }
-        public FourierTransformerShifting Shifting { get; }
+        public FourierTransformerShift Shift { get; }
         public FourierTransformerAlgorithm Algorithm { get; }
 
         public FourierTransformerSettings(
             FourierTransformerScaling scaling = default,
-            FourierTransformerShifting shifting = default,
+            FourierTransformerShift shift = default,
             FourierTransformerAlgorithm algorithm = default)
         {
             Scaling = scaling;
-            Shifting = shifting;
+            Shift = shift;
             Algorithm = algorithm;
         }
     }
@@ -55,11 +56,43 @@ namespace ParkersUtils
 
         public void Forward(RenderTexture target)
         {
-            FourierTransformGPU.DFT(target, false);
+            if (_settings.Shift == FourierTransformerShift.Centered)
+            {
+                FourierTransformGPU.FrequencyShift(target);
+            }
+
+            switch (_settings.Algorithm)
+            {
+                case FourierTransformerAlgorithm.DFT:
+                    FourierTransformGPU.DFT(target, false);
+                    break;
+                case FourierTransformerAlgorithm.FFT:
+                    FourierTransformGPU.FFT(target, false);
+                    break;
+            }
         }
 
         public void Inverse(RenderTexture target)
         {
+            switch (_settings.Algorithm)
+            {
+                case FourierTransformerAlgorithm.DFT:
+                    FourierTransformGPU.DFT(target, true);
+                    break;
+                case FourierTransformerAlgorithm.FFT:
+                    FourierTransformGPU.FFT(target, true);
+                    break;
+            }
+
+            if (_settings.Shift == FourierTransformerShift.Centered)
+            {
+                FourierTransformGPU.FrequencyShift(target);
+            }
+
+            if (_settings.Scaling == FourierTransformerScaling.Inverse)
+            {
+                FourierTransformGPU.InverseScale(target);
+            }
 
         }
     }
