@@ -1,0 +1,10 @@
+{
+    "name": "com.parker.utilities",
+    "version": "1.0.0",
+    "displayName": "Parker's Utils",
+    "unity": "2022.1",
+    "author": {
+      "name": "Parker",
+      "url": "https://www.parkersworld.me"
+    }
+  }
