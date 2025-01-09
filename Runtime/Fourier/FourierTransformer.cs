@@ -43,7 +43,6 @@ namespace ParkersUtils
     {
         private readonly FourierTransformerSettings _settings;
 
-
         public FourierTransformer()
         {
             _settings = new FourierTransformerSettings();
@@ -54,6 +53,10 @@ namespace ParkersUtils
             _settings = settings;
         }
 
+
+        /*
+        *   2D Fourier Transform (GPU)
+        */
         public void Forward(RenderTexture target)
         {
             if (_settings.Shift == FourierTransformerShift.Centered)
@@ -93,7 +96,21 @@ namespace ParkersUtils
             {
                 FourierTransformGPU.InverseScale(target);
             }
+        }
+
+        /*
+        *   1D Fourier Transform (CPU)
+        */
+        // TODO: Implement 1D fourier transform
+        public void Forward(Complex[] target)
+        {
 
         }
+
+        public void Inverse(Complex[] target)
+        {
+
+        }
+
     }
 }

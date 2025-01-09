@@ -23,7 +23,6 @@ namespace ParkersUtils
             return true;
         }
 
-
         public static RenderTexture CreatePaddedRenderTexture(RenderTexture source)
         {
             if (source.width == source.height)
