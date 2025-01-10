@@ -5,6 +5,10 @@
 #pragma kernel CS_DFT
 #pragma kernel CS_InverseScale
 #pragma kernel CS_FrequencyShift
+#pragma kernel CS_SymmetricScale
+#pragma kernel CS_LogarithmicScale
+#pragma kernel CS_ConvertToMagnitude
+#pragma kernel CS_ConvertToPhase
 
 #pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024
 #if defined(FFT_SIZE_1024)
@@ -77,8 +81,37 @@ void CS_InverseScale(uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(8,8,1)]
+void CS_SymmetricScale(uint3 id : SV_DispatchThreadID)
+{
+    _Target[id.xy] /= sqrt(SIZE * SIZE);
+}
+
+[numthreads(8,8,1)]
+void CS_LogarithmicScale(uint3 id : SV_DispatchThreadID)
+{
+    // _Target[id.xy] *= log(1.0 + _Target[id.xy]);
+    // _Target[id.xy] -= 295;
+    _Target[id.xy] = log(1.0 + _Target[id.xy]) / log(300);
+    // _Target[id.xy] /= log(300);
+}
+
+[numthreads(8,8,1)]
 void CS_FrequencyShift(uint3 id : SV_DispatchThreadID) 
 {
     float shift = (id.x + id.y) & 1 ? -1 : 1;
     _Target[id.xy] *= shift;
+}
+
+[numthreads(8,8,1)]
+void CS_ConvertToMagnitude(uint3 id : SV_DispatchThreadID)
+{
+    float magnitude = ComplexMagnitude(_Target[id.xy]);
+    _Target[id.xy] = magnitude;
+}
+
+[numthreads(8,8,1)]
+void CS_ConvertToPhase(uint3 id : SV_DispatchThreadID)
+{
+    float phase = ComplexPhase(_Target[id.xy]);
+    _Target[id.xy] = phase;
 }

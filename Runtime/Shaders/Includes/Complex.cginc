@@ -24,5 +24,14 @@ Complex ComplexConjugate(Complex a) {
     return Complex(a.real, -a.imag);
 }
 
+float ComplexMagnitude(Complex a) {
+    return sqrt(a.real * a.real + a.imag * a.imag);
+}
+
+float ComplexPhase(Complex a) {
+    return atan2(a.imag, a.real);
+}
+
+
 
 #endif

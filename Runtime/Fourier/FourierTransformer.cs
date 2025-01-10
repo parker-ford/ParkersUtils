@@ -7,7 +7,9 @@ namespace ParkersUtils
     public enum FourierTransformerScaling
     {
         None = 0,
-        Inverse = 1
+        Inverse = 1,
+        Symmetric = 2,
+        Logarithmic = 3,
     };
 
     public enum FourierTransformerShift
@@ -22,20 +24,31 @@ namespace ParkersUtils
         DFT = 1
     };
 
+    public enum FourierTransformerOutput
+    {
+        Complex = 0,
+        Magnitude = 1,
+        Phase = 2
+    }
+
+
     public readonly struct FourierTransformerSettings
     {
         public FourierTransformerScaling Scaling { get; }
         public FourierTransformerShift Shift { get; }
         public FourierTransformerAlgorithm Algorithm { get; }
+        public FourierTransformerOutput Output { get; }
 
         public FourierTransformerSettings(
             FourierTransformerScaling scaling = default,
             FourierTransformerShift shift = default,
-            FourierTransformerAlgorithm algorithm = default)
+            FourierTransformerAlgorithm algorithm = default,
+            FourierTransformerOutput output = default)
         {
             Scaling = scaling;
             Shift = shift;
             Algorithm = algorithm;
+            Output = output;
         }
     }
 
@@ -73,6 +86,25 @@ namespace ParkersUtils
                     FourierTransformGPU.FFT(target, false);
                     break;
             }
+
+            switch (_settings.Output)
+            {
+                case FourierTransformerOutput.Magnitude:
+                    FourierTransformGPU.ConvertToMagnitude(target);
+                    break;
+                case FourierTransformerOutput.Phase:
+                    FourierTransformGPU.ConvertToPhase(target);
+                    break;
+            }
+
+            if (_settings.Scaling == FourierTransformerScaling.Symmetric)
+            {
+                FourierTransformGPU.SymmetricScale(target);
+            }
+            else if (_settings.Scaling == FourierTransformerScaling.Logarithmic)
+            {
+                FourierTransformGPU.LogarithmicScale(target);
+            }
         }
 
         public void Inverse(RenderTexture target)
@@ -96,6 +128,11 @@ namespace ParkersUtils
             {
                 FourierTransformGPU.InverseScale(target);
             }
+            else if (_settings.Scaling == FourierTransformerScaling.Symmetric)
+            {
+                FourierTransformGPU.SymmetricScale(target);
+            }
+
         }
 
         /*

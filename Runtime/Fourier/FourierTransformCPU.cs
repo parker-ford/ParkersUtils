@@ -2,6 +2,9 @@ using UnityEngine;
 
 namespace ParkersUtils
 {
+
+    // TODO: This code is in a sorry state. I will need to revist this later
+
     public class FourierTransformCPU
     {
         public static void DFT(Complex[] samples)
