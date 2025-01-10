@@ -34,14 +34,14 @@
 #define LOG_SIZE 6
 #endif
 
-// groupshared float4 fftGroupBuffer[2][SIZE];
+groupshared Complex fftGroupBuffer[2][SIZE];
 groupshared Complex dftGroupBuffer[SIZE];
 
 RWTexture2D<Complex> _Target;
 bool _Direction;
 bool _Inverse;
 
-float2 DFT(uint threadIndex, Complex input){
+Complex DFT(uint threadIndex, Complex input){
     dftGroupBuffer[threadIndex] = input;
     GroupMemoryBarrierWithGroupSync();
 
@@ -60,6 +60,37 @@ float2 DFT(uint threadIndex, Complex input){
     return fn;
 }
 
+void ButterflyValues(uint step, uint index, out uint2 indices, out Complex twiddle) {
+    uint b = SIZE >> (step + 1);
+    uint w = b * (index / b);
+    uint i = (w + index) % SIZE;
+    sincos(-TWO_PI / SIZE * w, twiddle.y, twiddle.x);
+
+    if(_Inverse) twiddle.y = -twiddle.y;
+    indices = uint2(i, i + b);
+}
+
+Complex FFT(uint threadIndex, Complex input) {
+    fftGroupBuffer[0][threadIndex] = input;
+    GroupMemoryBarrierWithGroupSync();
+    bool flag = false;
+
+    [unroll]
+    for (uint step = 0; step < LOG_SIZE; ++step) {
+        uint2 inputsIndices;
+        Complex twiddle;
+        ButterflyValues(step, threadIndex, inputsIndices, twiddle);
+
+        Complex v = fftGroupBuffer[flag][inputsIndices.y];
+        fftGroupBuffer[!flag][threadIndex] = fftGroupBuffer[flag][inputsIndices.x] + ComplexMult(twiddle, v.xy);
+
+        flag = !flag;
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    return fftGroupBuffer[flag][threadIndex];
+}
+
 [numthreads(SIZE, 1, 1)]
 void CS_DFT (uint3 id : SV_DispatchThreadID)
 {
@@ -71,7 +102,9 @@ void CS_DFT (uint3 id : SV_DispatchThreadID)
 [numthreads(SIZE, 1, 1)]
 void CS_FFT (uint3 id : SV_DispatchThreadID)
 {
-    
+    uint threadIndex = id.x;
+    uint2 targetIndex = _Direction ? id.yx : id.xy;
+    _Target[targetIndex] = FFT(threadIndex, _Target[targetIndex]);
 }
 
 [numthreads(8,8,1)]
@@ -89,10 +122,7 @@ void CS_SymmetricScale(uint3 id : SV_DispatchThreadID)
 [numthreads(8,8,1)]
 void CS_LogarithmicScale(uint3 id : SV_DispatchThreadID)
 {
-    // _Target[id.xy] *= log(1.0 + _Target[id.xy]);
-    // _Target[id.xy] -= 295;
-    _Target[id.xy] = log(1.0 + _Target[id.xy]) / log(300);
-    // _Target[id.xy] /= log(300);
+    _Target[id.xy] = log(1.0 + _Target[id.xy]) / log(1000); // Large enough, avoids calculating max value 
 }
 
 [numthreads(8,8,1)]
