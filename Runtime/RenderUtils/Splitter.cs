@@ -32,7 +32,7 @@ namespace ParkersUtils
             return true;
         }
 
-        public static void SplitRGB(RenderTexture source, RenderTexture red, RenderTexture green, RenderTexture blue)
+        public static void SplitRGB(Texture source, RenderTexture red, RenderTexture green, RenderTexture blue)
         {
             int width = source.width;
             int height = source.height;
@@ -43,7 +43,7 @@ namespace ParkersUtils
             _splitterComputeShader.Dispatch(KERNEL_SPLIT_RGB, width / 8, height / 8, 1);
         }
 
-        public static void SplitR(RenderTexture source, RenderTexture red)
+        public static void SplitR(Texture source, RenderTexture red)
         {
             int width = source.width;
             int height = source.height;
@@ -52,7 +52,7 @@ namespace ParkersUtils
             _splitterComputeShader.Dispatch(KERNEL_SPLIT_R, width / 8, height / 8, 1);
         }
 
-        public static void SplitG(RenderTexture source, RenderTexture green)
+        public static void SplitG(Texture source, RenderTexture green)
         {
             int width = source.width;
             int height = source.height;
@@ -61,7 +61,7 @@ namespace ParkersUtils
             _splitterComputeShader.Dispatch(KERNEL_SPLIT_G, width / 8, height / 8, 1);
         }
 
-        public static void SplitB(RenderTexture source, RenderTexture blue)
+        public static void SplitB(Texture source, RenderTexture blue)
         {
             int width = source.width;
             int height = source.height;

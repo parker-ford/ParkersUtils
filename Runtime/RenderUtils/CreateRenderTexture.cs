@@ -4,18 +4,26 @@ namespace ParkersUtils
 {
     public static partial class RenderUtils
     {
-        public static RenderTextureDescriptor CreateDefaultRenderTextureDescriptor(int width, int height)
+        public static RenderTextureDescriptor CreateRenderTextureDescriptor(
+            int width,
+            int height,
+            bool sRGB = false,
+            UnityEngine.Rendering.TextureDimension dimension = UnityEngine.Rendering.TextureDimension.Tex2D,
+            RenderTextureFormat colorFormat = RenderTextureFormat.ARGBFloat,
+            int volumeDepth = 1,
+            int msaaSamples = 1,
+            bool enableRandomWrite = true)
         {
             return new RenderTextureDescriptor
             {
-                sRGB = false,
-                dimension = UnityEngine.Rendering.TextureDimension.Tex2D,
-                colorFormat = RenderTextureFormat.ARGBFloat,
+                sRGB = sRGB,
+                dimension = dimension,
+                colorFormat = colorFormat,
                 width = width,
                 height = height,
-                volumeDepth = 1,
-                msaaSamples = 1,
-                enableRandomWrite = true
+                volumeDepth = volumeDepth,
+                msaaSamples = msaaSamples,
+                enableRandomWrite = enableRandomWrite
             };
         }
 
