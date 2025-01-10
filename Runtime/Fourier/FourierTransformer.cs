@@ -1,28 +1,26 @@
-
 using UnityEngine;
 
 namespace ParkersUtils
 {
-
     public enum FourierTransformerScaling
     {
         None = 0,
-        Inverse = 1,
+        Inverse = 1, 
         Symmetric = 2,
-        Logarithmic = 3,
-    };
+        Logarithmic = 3
+    }
 
-    public enum FourierTransformerShift
+    public enum FourierTransformerShift 
     {
         None = 0,
         Centered = 1
-    };
+    }
 
     public enum FourierTransformerAlgorithm
     {
         FFT = 0,
         DFT = 1
-    };
+    }
 
     public enum FourierTransformerOutput
     {
@@ -30,7 +28,6 @@ namespace ParkersUtils
         Magnitude = 1,
         Phase = 2
     }
-
 
     public readonly struct FourierTransformerSettings
     {
@@ -97,13 +94,14 @@ namespace ParkersUtils
                     break;
             }
 
-            if (_settings.Scaling == FourierTransformerScaling.Symmetric)
+            switch (_settings.Scaling)
             {
-                FourierTransformGPU.SymmetricScale(target);
-            }
-            else if (_settings.Scaling == FourierTransformerScaling.Logarithmic)
-            {
-                FourierTransformGPU.LogarithmicScale(target);
+                case FourierTransformerScaling.Symmetric:
+                    FourierTransformGPU.SymmetricScale(target);
+                    break;
+                case FourierTransformerScaling.Logarithmic:
+                    FourierTransformGPU.LogarithmicScale(target);
+                    break;
             }
         }
 
@@ -124,15 +122,15 @@ namespace ParkersUtils
                 FourierTransformGPU.FrequencyShift(target);
             }
 
-            if (_settings.Scaling == FourierTransformerScaling.Inverse)
+            switch (_settings.Scaling)
             {
-                FourierTransformGPU.InverseScale(target);
+                case FourierTransformerScaling.Inverse:
+                    FourierTransformGPU.InverseScale(target);
+                    break;
+                case FourierTransformerScaling.Symmetric:
+                    FourierTransformGPU.SymmetricScale(target);
+                    break;
             }
-            else if (_settings.Scaling == FourierTransformerScaling.Symmetric)
-            {
-                FourierTransformGPU.SymmetricScale(target);
-            }
-
         }
 
         /*
@@ -148,6 +146,5 @@ namespace ParkersUtils
         {
 
         }
-
     }
 }

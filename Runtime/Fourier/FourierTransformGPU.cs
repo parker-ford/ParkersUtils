@@ -92,6 +92,18 @@ namespace ParkersUtils
             return true;
         }
 
+        private static bool PrepareComputation(RenderTexture target)
+        {
+            ClearComputeShaderVariables();
+
+            if (!ValidateTexture(target)) return false;
+
+            int size = target.width;
+            if (!SetTextureSize(size)) return false;
+
+            return true;
+        }
+
         private static void ProcessFFT(RenderTexture target, bool direction, bool inverse)
         {
             int size = target.width;
@@ -112,12 +124,9 @@ namespace ParkersUtils
 
         public static void FFT(RenderTexture target, bool inverse)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             // Order of direction dependent on if inverse
             ProcessFFT(target, inverse ? false : true, inverse);
@@ -126,12 +135,9 @@ namespace ParkersUtils
 
         public static void DFT(RenderTexture target, bool inverse)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             // Order of direction dependent on if inverse
             ProcessDFT(target, inverse ? false : true, inverse);
@@ -140,12 +146,9 @@ namespace ParkersUtils
 
         public static void InverseScale(RenderTexture target)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             _computeShader.SetTexture(KERNEL_INVERSE_SCALE, "_Target", target);
             _computeShader.Dispatch(KERNEL_INVERSE_SCALE, size / 8, size / 8, 1);
@@ -153,12 +156,9 @@ namespace ParkersUtils
 
         public static void SymmetricScale(RenderTexture target)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             _computeShader.SetTexture(KERNEL_SYMMETRIC_SCALE, "_Target", target);
             _computeShader.Dispatch(KERNEL_SYMMETRIC_SCALE, size / 8, size / 8, 1);
@@ -166,12 +166,9 @@ namespace ParkersUtils
 
         public static void LogarithmicScale(RenderTexture target)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             _computeShader.SetTexture(KERNEL_LOGARITHMIC_SCALE, "_Target", target);
             _computeShader.Dispatch(KERNEL_LOGARITHMIC_SCALE, size / 8, size / 8, 1);
@@ -179,12 +176,9 @@ namespace ParkersUtils
 
         public static void FrequencyShift(RenderTexture target)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             _computeShader.SetTexture(KERNEL_FREQUENCY_SHIFT, "_Target", target);
             _computeShader.Dispatch(KERNEL_FREQUENCY_SHIFT, size / 8, size / 8, 1);
@@ -192,12 +186,9 @@ namespace ParkersUtils
 
         public static void ConvertToMagnitude(RenderTexture target)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             _computeShader.SetTexture(KERNEL_CONVERT_TO_MAGNITUDE, "_Target", target);
             _computeShader.Dispatch(KERNEL_CONVERT_TO_MAGNITUDE, size / 8, size / 8, 1);
@@ -205,16 +196,12 @@ namespace ParkersUtils
 
         public static void ConvertToPhase(RenderTexture target)
         {
-            ClearComputeShaderVariables();
-
-            if (!ValidateTexture(target)) return;
+            if (!PrepareComputation(target)) return;
 
             int size = target.width;
-            if (!SetTextureSize(size)) return;
 
             _computeShader.SetTexture(KERNEL_CONVERT_TO_PHASE, "_Target", target);
             _computeShader.Dispatch(KERNEL_CONVERT_TO_PHASE, size / 8, size / 8, 1);
         }
     }
 }
-
