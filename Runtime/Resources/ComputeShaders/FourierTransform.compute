@@ -1,3 +1,5 @@
+#pragma target 5.1 
+
 #include "Packages/com.parker.utilities/Runtime/Shaders/Includes/Complex.cginc"
 #include "Packages/com.parker.utilities/Runtime/Shaders/Includes/ShaderUtils.cginc"
 
@@ -11,8 +13,11 @@
 #pragma kernel CS_ConvertToMagnitude
 #pragma kernel CS_ConvertToPhase
 
-#pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024 FFT_SIZE_2048
-#if defined(FFT_SIZE_2048)
+#pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024 FFT_SIZE_2048 FFT_SIZE_4096
+#if defined(FFT_SIZE_4096)
+#define SIZE 4096
+#define LOG_SIZE 12
+#elif defined(FFT_SIZE_2048)
 #define SIZE 2048
 #define LOG_SIZE 11
 #elif defined(FFT_SIZE_1024)
@@ -38,13 +43,18 @@
 #define LOG_SIZE 6
 #endif
 
+#pragma multi_compile _ PING_PONG NON_PING_PONG
+#if defined(PING_PONG)
 groupshared Complex groupSharedBuffer[2][SIZE];
-// groupshared Complex dftGroupBuffer[SIZE];
+#else
+groupshared Complex groupSharedBuffer[SIZE];
+#endif
 
 RWTexture2D<Complex> _Target;
 bool _Direction;
 bool _Inverse;
 
+#if defined(PING_PONG)
 Complex DFT(uint threadIndex, Complex input){
     groupSharedBuffer[0][threadIndex] = input;
     GroupMemoryBarrierWithGroupSync();
@@ -63,6 +73,26 @@ Complex DFT(uint threadIndex, Complex input){
     GroupMemoryBarrierWithGroupSync();
     return fn;
 }
+#else
+Complex DFT(uint threadIndex, Complex input){
+    groupSharedBuffer[threadIndex] = input;
+    GroupMemoryBarrierWithGroupSync();
+
+    Complex fn = 0;
+    for(uint k = 0; k < SIZE; k++){
+
+        float theta = TWO_PI * float(threadIndex * k) / float(SIZE);
+        Complex w = Complex(cos(theta), -sin(theta));
+        if(_Inverse) w = ComplexConjugate(w);
+
+        Complex fk = groupSharedBuffer[k];
+        fn += ComplexMult(fk, w);
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+    return fn;
+}
+#endif
 
 void ButterflyValues(uint step, uint index, out uint2 indices, out Complex twiddle) {
     uint b = SIZE >> (step + 1);
@@ -74,6 +104,7 @@ void ButterflyValues(uint step, uint index, out uint2 indices, out Complex twidd
     indices = uint2(i, i + b);
 }
 
+#if defined(PING_PONG)
 Complex FFT(uint threadIndex, Complex input) {
     groupSharedBuffer[0][threadIndex] = input;
     GroupMemoryBarrierWithGroupSync();
@@ -94,7 +125,32 @@ Complex FFT(uint threadIndex, Complex input) {
 
     return groupSharedBuffer[flag][threadIndex];
 }
+#else
+Complex FFT(uint threadIndex, Complex input) {
+    groupSharedBuffer[threadIndex] = input;
+    GroupMemoryBarrierWithGroupSync();
 
+    [unroll]
+    for (uint step = 0; step < LOG_SIZE; ++step) {
+        uint2 inputsIndices;
+        Complex twiddle;
+        ButterflyValues(step, threadIndex, inputsIndices, twiddle);
+
+        Complex v = groupSharedBuffer[inputsIndices.y];
+        Complex result = groupSharedBuffer[inputsIndices.x] + ComplexMult(twiddle, v.xy);
+
+        GroupMemoryBarrierWithGroupSync();
+        groupSharedBuffer[threadIndex] = result;
+        GroupMemoryBarrierWithGroupSync();
+
+    }
+
+    return groupSharedBuffer[threadIndex];
+}
+#endif
+
+
+#if defined(PING_PONG)
 void FFT_8(uint threadIndex, Complex input[8], out Complex outputs[8]) {
     for(int i = 0; i < 8; i++)
     {
@@ -124,6 +180,45 @@ void FFT_8(uint threadIndex, Complex input[8], out Complex outputs[8]) {
         outputs[j] = groupSharedBuffer[flag][index];
     }
 }
+#else
+void FFT_8(uint threadIndex, Complex input[8], out Complex outputs[8]) {
+    for(int i = 0; i < 8; i++)
+    {
+        int index = threadIndex * 8 + i;
+        groupSharedBuffer[index] = input[i];
+    }
+    GroupMemoryBarrierWithGroupSync();
+    bool flag = false;
+
+    [unroll]
+    for (uint step = 0; step < LOG_SIZE; ++step) {
+        Complex results[8];
+        for(int i = 0; i < 8; i++){
+            int index = threadIndex * 8 + i;
+            uint2 inputsIndices;
+            Complex twiddle;
+            ButterflyValues(step, index, inputsIndices, twiddle);
+    
+            Complex v = groupSharedBuffer[inputsIndices.y];
+            results[i] = groupSharedBuffer[inputsIndices.x] + ComplexMult(twiddle, v.xy);
+            // groupSharedBuffer[!flag][index] = groupSharedBuffer[inputsIndices.x] + ComplexMult(twiddle, v.xy);
+        }
+        GroupMemoryBarrierWithGroupSync();
+        for(int j = 0; j < 8; j++)
+        {
+            int index = threadIndex * 8 + j;
+            groupSharedBuffer[index] = results[j];
+        }
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    for(int j = 0; j < 8; j++){
+        int index = threadIndex * 8 + j;
+        outputs[j] = groupSharedBuffer[index];
+    }
+}
+#endif
+
 
 [numthreads(SIZE, 1, 1)]
 void CS_DFT (uint3 id : SV_DispatchThreadID)

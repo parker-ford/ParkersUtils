@@ -46,6 +46,10 @@ namespace ParkersUtils
                 _computeShader.DisableKeyword("FFT_SIZE_512");
                 _computeShader.DisableKeyword("FFT_SIZE_1024");
                 _computeShader.DisableKeyword("FFT_SIZE_2048");
+                _computeShader.DisableKeyword("FFT_SIZE_4096");
+
+                _computeShader.DisableKeyword("PING_PONG");
+                _computeShader.DisableKeyword("NON_PING_PONG");
             }
         }
 
@@ -91,8 +95,11 @@ namespace ParkersUtils
                 case 2048:
                     _computeShader.EnableKeyword("FFT_SIZE_2048");
                     break;
+                case 4096:
+                    _computeShader.EnableKeyword("FFT_SIZE_4096");
+                    break;
                 default:
-                    Debug.LogError("Unsupported texture size. Must be 16, 64, 128, 256, 512, 1024 or 2048.");
+                    Debug.LogError("Unsupported texture size. Must be 16, 64, 128, 256, 512, 1024, 2048, or 4096.");
                     return false;
             }
             return true;
@@ -106,6 +113,16 @@ namespace ParkersUtils
 
             int size = target.width;
             if (!SetTextureSize(size)) return false;
+
+            if (size > 2048)
+            {
+                _computeShader.EnableKeyword("NON_PING_PONG");
+            }
+            else
+            {
+                _computeShader.EnableKeyword("PING_PONG");
+            }
+
 
             return true;
         }
