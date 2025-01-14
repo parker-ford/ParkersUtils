@@ -42,5 +42,35 @@ namespace ParkersUtils
             rt.Create();
             return rt;
         }
+
+        public static Texture2D CreateTexture2DFromRenderTexture(RenderTexture source)
+        {
+            var format = source.descriptor.colorFormat switch
+            {
+                RenderTextureFormat.ARGBFloat => TextureFormat.RGBAFloat,
+                RenderTextureFormat.ARGBHalf => TextureFormat.RGBAHalf,
+                RenderTextureFormat.ARGB32 => TextureFormat.RGBA32,
+                _ => TextureFormat.RGBA32
+            };
+
+            var tex2D = new Texture2D(
+                source.descriptor.width,
+                source.descriptor.height,
+                format,
+                source.descriptor.msaaSamples > 1,
+                source.descriptor.sRGB);
+
+            tex2D.wrapMode = source.wrapMode;
+            tex2D.filterMode = source.filterMode;
+            tex2D.anisoLevel = source.anisoLevel;
+
+            var prevActive = RenderTexture.active;
+            RenderTexture.active = source;
+            tex2D.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
+            tex2D.Apply();
+            RenderTexture.active = prevActive;
+
+            return tex2D;
+        }
     }
 }

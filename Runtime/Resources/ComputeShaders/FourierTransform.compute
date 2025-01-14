@@ -3,15 +3,18 @@
 
 #pragma kernel CS_FFT
 #pragma kernel CS_DFT
-#pragma kernel CS_InverseScale
+#pragma kernel CS_LinearScale
 #pragma kernel CS_FrequencyShift
 #pragma kernel CS_SymmetricScale
 #pragma kernel CS_LogarithmicScale
 #pragma kernel CS_ConvertToMagnitude
 #pragma kernel CS_ConvertToPhase
 
-#pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024
-#if defined(FFT_SIZE_1024)
+#pragma multi_compile _ FFT_SIZE_16 FFT_SIZE_64 FFT_SIZE_128 FFT_SIZE_256 FFT_SIZE_512 FFT_SIZE_1024 FFT_SIZE_2048
+#if defined(FFT_SIZE_2048)
+#define SIZE 2048
+#define LOG_SIZE 11
+#elif defined(FFT_SIZE_1024)
 #define SIZE 1024
 #define LOG_SIZE 10
 #elif defined(FFT_SIZE_512)
@@ -95,8 +98,11 @@ Complex FFT(uint threadIndex, Complex input) {
 void CS_DFT (uint3 id : SV_DispatchThreadID)
 {
     uint threadIndex = id.x;
-    uint2 targetIndex = _Direction ? id.yx : id.xy;
+    float2 targetIndex = _Direction ? id.yx : id.xy;
+    // WritePixelBilinear(_Target, targetIndex, DFT(threadIndex, _Target[targetIndex]));
     _Target[targetIndex] = DFT(threadIndex, _Target[targetIndex]);
+    // _Target[targetIndex] += 0.1;
+    // _Target[targetIndex] = DFT(threadIndex,)
 }
 
 [numthreads(SIZE, 1, 1)]
@@ -108,7 +114,7 @@ void CS_FFT (uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(8,8,1)]
-void CS_InverseScale(uint3 id : SV_DispatchThreadID) 
+void CS_LinearScale(uint3 id : SV_DispatchThreadID) 
 {
     _Target[id.xy] /= SIZE * SIZE;
 }

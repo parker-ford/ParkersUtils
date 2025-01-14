@@ -5,12 +5,13 @@ namespace ParkersUtils
     public enum FourierTransformerScaling
     {
         None = 0,
-        Inverse = 1, 
+        Inverse = 1,
         Symmetric = 2,
-        Logarithmic = 3
+        Logarithmic = 3,
+        Forward = 4
     }
 
-    public enum FourierTransformerShift 
+    public enum FourierTransformerShift
     {
         None = 0,
         Centered = 1
@@ -102,6 +103,9 @@ namespace ParkersUtils
                 case FourierTransformerScaling.Logarithmic:
                     FourierTransformGPU.LogarithmicScale(target);
                     break;
+                case FourierTransformerScaling.Forward:
+                    FourierTransformGPU.LinearScale(target);
+                    break;
             }
         }
 
@@ -125,7 +129,7 @@ namespace ParkersUtils
             switch (_settings.Scaling)
             {
                 case FourierTransformerScaling.Inverse:
-                    FourierTransformGPU.InverseScale(target);
+                    FourierTransformGPU.LinearScale(target);
                     break;
                 case FourierTransformerScaling.Symmetric:
                     FourierTransformGPU.SymmetricScale(target);

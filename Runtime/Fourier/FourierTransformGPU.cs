@@ -8,7 +8,7 @@ namespace ParkersUtils
 
         private static readonly int KERNEL_FFT;
         private static readonly int KERNEL_DFT;
-        private static readonly int KERNEL_INVERSE_SCALE;
+        private static readonly int KERNEL_LINEAR_SCALE;
         private static readonly int KERNEL_SYMMETRIC_SCALE;
         private static readonly int KERNEL_LOGARITHMIC_SCALE;
         private static readonly int KERNEL_FREQUENCY_SHIFT;
@@ -21,7 +21,7 @@ namespace ParkersUtils
 
             KERNEL_FFT = _computeShader.FindKernel("CS_FFT");
             KERNEL_DFT = _computeShader.FindKernel("CS_DFT");
-            KERNEL_INVERSE_SCALE = _computeShader.FindKernel("CS_InverseScale");
+            KERNEL_LINEAR_SCALE = _computeShader.FindKernel("CS_LinearScale");
             KERNEL_SYMMETRIC_SCALE = _computeShader.FindKernel("CS_SymmetricScale");
             KERNEL_LOGARITHMIC_SCALE = _computeShader.FindKernel("CS_LogarithmicScale");
             KERNEL_FREQUENCY_SHIFT = _computeShader.FindKernel("CS_FrequencyShift");
@@ -43,6 +43,7 @@ namespace ParkersUtils
                 _computeShader.DisableKeyword("FFT_SIZE_256");
                 _computeShader.DisableKeyword("FFT_SIZE_512");
                 _computeShader.DisableKeyword("FFT_SIZE_1024");
+                _computeShader.DisableKeyword("FFT_SIZE_2048");
             }
         }
 
@@ -85,8 +86,11 @@ namespace ParkersUtils
                 case 1024:
                     _computeShader.EnableKeyword("FFT_SIZE_1024");
                     break;
+                case 2048:
+                    _computeShader.EnableKeyword("FFT_SIZE_2048");
+                    break;
                 default:
-                    Debug.LogError("Unsupported texture size. Must be 16, 64, 128, 256, 512 or 1024.");
+                    Debug.LogError("Unsupported texture size. Must be 16, 64, 128, 256, 512, 1024 or 2048.");
                     return false;
             }
             return true;
@@ -144,14 +148,14 @@ namespace ParkersUtils
             ProcessDFT(target, inverse ? true : false, inverse);
         }
 
-        public static void InverseScale(RenderTexture target)
+        public static void LinearScale(RenderTexture target)
         {
             if (!PrepareComputation(target)) return;
 
             int size = target.width;
 
-            _computeShader.SetTexture(KERNEL_INVERSE_SCALE, "_Target", target);
-            _computeShader.Dispatch(KERNEL_INVERSE_SCALE, size / 8, size / 8, 1);
+            _computeShader.SetTexture(KERNEL_LINEAR_SCALE, "_Target", target);
+            _computeShader.Dispatch(KERNEL_LINEAR_SCALE, size / 8, size / 8, 1);
         }
 
         public static void SymmetricScale(RenderTexture target)
