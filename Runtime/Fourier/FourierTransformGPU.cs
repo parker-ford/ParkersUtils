@@ -8,6 +8,7 @@ namespace ParkersUtils
 
         private static readonly int KERNEL_FFT;
         private static readonly int KERNEL_DFT;
+        private static readonly int KERNEL_FFT_SIGNAL8;
         private static readonly int KERNEL_LINEAR_SCALE;
         private static readonly int KERNEL_SYMMETRIC_SCALE;
         private static readonly int KERNEL_LOGARITHMIC_SCALE;
@@ -21,6 +22,7 @@ namespace ParkersUtils
 
             KERNEL_FFT = _computeShader.FindKernel("CS_FFT");
             KERNEL_DFT = _computeShader.FindKernel("CS_DFT");
+            KERNEL_FFT_SIGNAL8 = _computeShader.FindKernel("CS_FFT_Signal8");
             KERNEL_LINEAR_SCALE = _computeShader.FindKernel("CS_LinearScale");
             KERNEL_SYMMETRIC_SCALE = _computeShader.FindKernel("CS_SymmetricScale");
             KERNEL_LOGARITHMIC_SCALE = _computeShader.FindKernel("CS_LogarithmicScale");
@@ -126,11 +128,18 @@ namespace ParkersUtils
             _computeShader.Dispatch(KERNEL_DFT, 1, size, 1);
         }
 
+        private static void ProcessFFTRadix8(RenderTexture target, bool direction, bool inverse)
+        {
+            int size = target.width;
+            _computeShader.SetTexture(KERNEL_FFT_SIGNAL8, "_Target", target);
+            _computeShader.SetBool("_Direction", direction);
+            _computeShader.SetBool("_Inverse", inverse);
+            _computeShader.Dispatch(KERNEL_FFT_SIGNAL8, 1, size, 1);
+        }
+
         public static void FFT(RenderTexture target, bool inverse)
         {
             if (!PrepareComputation(target)) return;
-
-            int size = target.width;
 
             // Order of direction dependent on if inverse
             ProcessFFT(target, inverse ? false : true, inverse);
@@ -141,11 +150,18 @@ namespace ParkersUtils
         {
             if (!PrepareComputation(target)) return;
 
-            int size = target.width;
-
             // Order of direction dependent on if inverse
             ProcessDFT(target, inverse ? false : true, inverse);
             ProcessDFT(target, inverse ? true : false, inverse);
+        }
+
+        public static void FFTRadix8(RenderTexture target, bool inverse)
+        {
+            if (!PrepareComputation(target)) return;
+
+            // Order of direction dependent on if inverse
+            ProcessFFTRadix8(target, inverse ? false : true, inverse);
+            ProcessFFTRadix8(target, inverse ? true : false, inverse);
         }
 
         public static void LinearScale(RenderTexture target)

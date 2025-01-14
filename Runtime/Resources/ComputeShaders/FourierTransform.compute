@@ -3,6 +3,7 @@
 
 #pragma kernel CS_FFT
 #pragma kernel CS_DFT
+#pragma kernel CS_FFT_Signal8
 #pragma kernel CS_LinearScale
 #pragma kernel CS_FrequencyShift
 #pragma kernel CS_SymmetricScale
@@ -37,15 +38,15 @@
 #define LOG_SIZE 6
 #endif
 
-groupshared Complex fftGroupBuffer[2][SIZE];
-groupshared Complex dftGroupBuffer[SIZE];
+groupshared Complex groupSharedBuffer[2][SIZE];
+// groupshared Complex dftGroupBuffer[SIZE];
 
 RWTexture2D<Complex> _Target;
 bool _Direction;
 bool _Inverse;
 
 Complex DFT(uint threadIndex, Complex input){
-    dftGroupBuffer[threadIndex] = input;
+    groupSharedBuffer[0][threadIndex] = input;
     GroupMemoryBarrierWithGroupSync();
 
     Complex fn = 0;
@@ -55,7 +56,7 @@ Complex DFT(uint threadIndex, Complex input){
         Complex w = Complex(cos(theta), -sin(theta));
         if(_Inverse) w = ComplexConjugate(w);
 
-        Complex fk = dftGroupBuffer[k];
+        Complex fk = groupSharedBuffer[0][k];
         fn += ComplexMult(fk, w);
     }
 
@@ -74,7 +75,7 @@ void ButterflyValues(uint step, uint index, out uint2 indices, out Complex twidd
 }
 
 Complex FFT(uint threadIndex, Complex input) {
-    fftGroupBuffer[0][threadIndex] = input;
+    groupSharedBuffer[0][threadIndex] = input;
     GroupMemoryBarrierWithGroupSync();
     bool flag = false;
 
@@ -84,14 +85,44 @@ Complex FFT(uint threadIndex, Complex input) {
         Complex twiddle;
         ButterflyValues(step, threadIndex, inputsIndices, twiddle);
 
-        Complex v = fftGroupBuffer[flag][inputsIndices.y];
-        fftGroupBuffer[!flag][threadIndex] = fftGroupBuffer[flag][inputsIndices.x] + ComplexMult(twiddle, v.xy);
+        Complex v = groupSharedBuffer[flag][inputsIndices.y];
+        groupSharedBuffer[!flag][threadIndex] = groupSharedBuffer[flag][inputsIndices.x] + ComplexMult(twiddle, v.xy);
 
         flag = !flag;
         GroupMemoryBarrierWithGroupSync();
     }
 
-    return fftGroupBuffer[flag][threadIndex];
+    return groupSharedBuffer[flag][threadIndex];
+}
+
+void FFT_8(uint threadIndex, Complex input[8], out Complex outputs[8]) {
+    for(int i = 0; i < 8; i++)
+    {
+        int index = threadIndex * 8 + i;
+        groupSharedBuffer[0][index] = input[i];
+    }
+    GroupMemoryBarrierWithGroupSync();
+    bool flag = false;
+
+    [unroll]
+    for (uint step = 0; step < LOG_SIZE; ++step) {
+        for(int i = 0; i < 8; i++){
+            int index = threadIndex * 8 + i;
+            uint2 inputsIndices;
+            Complex twiddle;
+            ButterflyValues(step, index, inputsIndices, twiddle);
+    
+            Complex v = groupSharedBuffer[flag][inputsIndices.y];
+            groupSharedBuffer[!flag][index] = groupSharedBuffer[flag][inputsIndices.x] + ComplexMult(twiddle, v.xy);
+        }
+        flag = !flag;
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    for(int j = 0; j < 8; j++){
+        int index = threadIndex * 8 + j;
+        outputs[j] = groupSharedBuffer[flag][index];
+    }
 }
 
 [numthreads(SIZE, 1, 1)]
@@ -99,10 +130,7 @@ void CS_DFT (uint3 id : SV_DispatchThreadID)
 {
     uint threadIndex = id.x;
     float2 targetIndex = _Direction ? id.yx : id.xy;
-    // WritePixelBilinear(_Target, targetIndex, DFT(threadIndex, _Target[targetIndex]));
     _Target[targetIndex] = DFT(threadIndex, _Target[targetIndex]);
-    // _Target[targetIndex] += 0.1;
-    // _Target[targetIndex] = DFT(threadIndex,)
 }
 
 [numthreads(SIZE, 1, 1)]
@@ -111,6 +139,31 @@ void CS_FFT (uint3 id : SV_DispatchThreadID)
     uint threadIndex = id.x;
     uint2 targetIndex = _Direction ? id.yx : id.xy;
     _Target[targetIndex] = FFT(threadIndex, _Target[targetIndex]);
+}
+
+[numthreads(SIZE / 8, 1, 1)]
+void CS_FFT_Signal8 (uint3 id : SV_DispatchThreadID)
+{
+    Complex inputs[8];
+    Complex outputs[8];
+
+    uint threadIndex = id.x;
+
+    for(int i = 0; i < 8; i++)
+    {
+        uint2 targetIndex = uint2(id.x * 8 + i, id.y);
+        targetIndex = _Direction ? targetIndex.yx : targetIndex.xy;
+        inputs[i] = _Target[targetIndex];
+    }
+
+    FFT_8(threadIndex, inputs, outputs);
+
+    for(int j = 0; j < 8; j++)
+    {
+        uint2 targetIndex = uint2(id.x * 8 + j, id.y);
+        targetIndex = _Direction ? targetIndex.yx : targetIndex.xy;
+        _Target[targetIndex] = outputs[j];
+    }
 }
 
 [numthreads(8,8,1)]

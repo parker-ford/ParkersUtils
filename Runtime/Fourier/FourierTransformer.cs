@@ -20,7 +20,8 @@ namespace ParkersUtils
     public enum FourierTransformerAlgorithm
     {
         FFT = 0,
-        DFT = 1
+        DFT = 1,
+        FFTSignal8 = 2
     }
 
     public enum FourierTransformerOutput
@@ -79,9 +80,17 @@ namespace ParkersUtils
             {
                 case FourierTransformerAlgorithm.DFT:
                     FourierTransformGPU.DFT(target, false);
+                    Debug.LogError("Fourtier Transformer Error: FFT algorithm only supports input dimensions up to 1024. Use FFTSignal8  for larger dimensions.");
                     break;
                 case FourierTransformerAlgorithm.FFT:
+                    if (target.width > 1024 || target.height > 1024)
+                    {
+                        Debug.LogError("Fourtier Transformer Error: FFT algorithm only supports input dimensions up to 1024. Use FFTSignal8  for larger dimensions.");
+                    }
                     FourierTransformGPU.FFT(target, false);
+                    break;
+                case FourierTransformerAlgorithm.FFTSignal8:
+                    FourierTransformGPU.FFTRadix8(target, false);
                     break;
             }
 
@@ -118,6 +127,9 @@ namespace ParkersUtils
                     break;
                 case FourierTransformerAlgorithm.FFT:
                     FourierTransformGPU.FFT(target, true);
+                    break;
+                case FourierTransformerAlgorithm.FFTSignal8:
+                    FourierTransformGPU.FFTRadix8(target, true);
                     break;
             }
 
