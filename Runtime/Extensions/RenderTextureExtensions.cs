@@ -13,5 +13,11 @@ namespace ParkersUtils
             RenderTexture.active = null;
             return target;
         }
+
+        public static RenderTexture Clear(this RenderTexture target)
+        {
+            RenderUtils.ClearRenderTexture(target);
+            return target;
+        }
     }
 }
