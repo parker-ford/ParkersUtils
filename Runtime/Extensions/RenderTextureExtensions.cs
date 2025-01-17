@@ -14,10 +14,22 @@ namespace ParkersUtils
             return target;
         }
 
+        public static RenderTexture CopyData(this RenderTexture target, RenderTexture source)
+        {
+            RenderUtils.CopyRenderTexture(target, source);
+            return target;
+        }
+
         public static RenderTexture Clear(this RenderTexture target)
         {
             RenderUtils.ClearRenderTexture(target);
             return target;
+        }
+
+        public static Color ReadPixel(this RenderTexture target, int x, int y)
+        {
+
+            return RenderUtils.ReadRenderTexturePixel(target, x, y);
         }
     }
 }

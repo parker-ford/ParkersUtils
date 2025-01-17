@@ -1,0 +1,18 @@
+#pragma kernel CS_ReadPixel
+
+Texture2D<float4> _Source;
+uint _X, _Y;
+uint _Width, _Height;
+
+#pragma bind_buffer(name: _PixelBuffer, binding: 0) // needed?
+
+RWStructuredBuffer<float4> _PixelBuffer;
+
+[numthreads(1,1,1)]
+void CS_ReadPixel (uint3 id : SV_DispatchThreadID)
+{
+    uint x = _X;
+    uint y = _Y;
+    float4 pixel = _Source[uint2(x,y)];
+    _PixelBuffer[0] = pixel;
+}

@@ -1,0 +1,36 @@
+#pragma kernel CS_SumColor
+
+RWTexture2D<float4> _Target;
+
+uint _Level;
+uint _Span;
+uint _Width, _Height;
+
+[numthreads(8,8,1)]
+void CS_SumColor (uint3 id : SV_DispatchThreadID)
+{
+    if((id.x % _Level == 0) && (id.y % _Level == 0))
+    {
+        uint dx = id.x + _Span;
+        uint dy = id.y + _Span;
+        float4 total = float4(0,0,0,0);
+
+        total += _Target[id.xy];
+        if(dx < _Width)
+        {
+            total += _Target[uint2(dx, id.y)];
+        }
+        if(dy < _Height)
+        {
+            total += _Target[uint2(id.x, dy)];
+        }
+        if(dx < _Width && dy < _Height)
+        {
+            total += _Target[uint2(dx,dy)];
+        }
+        _Target[id.xy] = total;
+
+        // _Target[id.xy] = float4(1,0,1,1);
+        // _Target[id.xy] += float4(0,1,0,0);
+    }
+}
