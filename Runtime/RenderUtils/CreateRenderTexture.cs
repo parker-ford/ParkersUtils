@@ -30,7 +30,7 @@ namespace ParkersUtils
         public static RenderTexture CreateRenderTexture(
             RenderTextureDescriptor descriptor,
             TextureWrapMode wrapMode = TextureWrapMode.Repeat,
-            FilterMode filterMode = FilterMode.Trilinear,
+            FilterMode filterMode = FilterMode.Bilinear,
             int anisoLevel = 1)
         {
             var rt = new RenderTexture(descriptor)
