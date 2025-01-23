@@ -31,5 +31,11 @@ namespace ParkersUtils
 
             return RenderUtils.ReadRenderTexturePixel(target, x, y);
         }
+
+        public static RenderTexture GammaCorrect(this RenderTexture target)
+        {
+            RenderUtils.GammaCorrectRenderTexture(target);
+            return target;
+        }
     }
 }

@@ -1,0 +1,13 @@
+#pragma kernel CS_GammaCorrect
+
+RWTexture2D<float4> _Target;
+
+[numthreads(8,8,1)]
+void CS_GammaCorrect (uint3 id : SV_DispatchThreadID)
+{
+    float4 sample = _Target[id.xy];
+    float3 color = sample.rgb;
+    float alpha = sample.a;
+    color = pow(color, 1.0 / 2.2);
+    _Target[id.xy] = float4(color, alpha);
+}
