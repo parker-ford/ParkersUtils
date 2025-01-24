@@ -73,6 +73,12 @@ float3 linearToGamma(float3 col){
 // https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions
 // view Direction should be passed in as tangent space
 float2 parallaxMap(float2 uv, float3 viewDirection, sampler2D displacementTex, float displacementStrength){
+
+    if(length(tex2D(displacementTex, uv)) == 0 || displacementStrength < 0.0001)
+    {
+        return uv;
+    }
+
     const int minSteps = 64;
     const int maxSteps = 64;
     viewDirection = normalize(viewDirection);
@@ -100,10 +106,17 @@ float2 parallaxMap(float2 uv, float3 viewDirection, sampler2D displacementTex, f
 }
 
 float3 normalMap(float3 normal, float3 tangent, float3 bitangent, float2 uv, sampler2D normalTex, float normalStrength){
+    float4 sample = tex2D(normalTex, uv);
+    if(length(sample) == 0)
+    {
+        return normal;
+    }
+    
     float3 tangentSpaceNormal = 0;
-    tangentSpaceNormal.xy = tex2D(normalTex, uv).wy * 2 - 1;
+    tangentSpaceNormal.xy = sample.wy * 2 - 1;
     tangentSpaceNormal.xy *= normalStrength;
     tangentSpaceNormal.z = sqrt(1 - saturate(dot(tangentSpaceNormal.xy, tangentSpaceNormal.xy)));
+    
     return normalize(tangentSpaceNormal.x * tangent + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * normal);
 }
 
