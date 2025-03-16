@@ -45,4 +45,27 @@ public static class Saver
             Object.DestroyImmediate(tex);
 
     }
+
+    public static void SaveAsAsset(Object asset, string assetPath)
+    {
+        UnityEditor.AssetDatabase.CreateAsset(asset, assetPath);
+        UnityEditor.AssetDatabase.SaveAssets();
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("Saved Asset to " + assetPath);
+    }
+
+    public static string GetPathWithPostfix(Object obj, string postfix)
+    {
+        // Get the path of the original Texture2D asset
+        string originalTexturePath = UnityEditor.AssetDatabase.GetAssetPath(obj);
+        string directoryPath = System.IO.Path.GetDirectoryName(originalTexturePath);
+
+        // Extract the base file name (without extension) from the original texture path
+        string originalFileName = System.IO.Path.GetFileNameWithoutExtension(originalTexturePath);
+
+        string fileName = originalFileName + postfix;
+        string filePath = System.IO.Path.Combine(directoryPath, fileName);
+
+        return filePath;
+    }
 }
