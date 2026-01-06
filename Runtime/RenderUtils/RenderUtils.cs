@@ -81,5 +81,10 @@ namespace ParkersUtils
             Color pixel = new Color(pixelArray[0], pixelArray[1], pixelArray[2], pixelArray[3]);
             return pixel;
         }
+
+        public static int GetDispatchSize(int size, int threadGroupSize)
+        {
+            return (size + threadGroupSize - 1) / threadGroupSize;
+        }
     }
 }

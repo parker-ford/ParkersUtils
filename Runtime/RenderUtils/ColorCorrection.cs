@@ -22,11 +22,13 @@ namespace ParkersUtils
 
             return true;
         }
-        public static void GammaCorrectRenderTexture(RenderTexture target)
+
+        public static void GammaCorrectRenderTexture(RenderTexture target, float gammaExponent = 2.2f, bool inverse = false)
         {
             int width = target.width;
             int height = target.height;
 
+            _gammaCorrectionShader.SetFloat("_GammaExponent", inverse ? gammaExponent : 1.0f / gammaExponent);
             _gammaCorrectionShader.SetTexture(KERNEL_GAMMA_CORRECTION, "_Target", target);
             _gammaCorrectionShader.Dispatch(KERNEL_GAMMA_CORRECTION, width / 8, height / 8, 1);
         }

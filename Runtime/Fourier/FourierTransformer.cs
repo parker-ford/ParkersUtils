@@ -81,7 +81,7 @@ namespace ParkersUtils
                 case FourierTransformerAlgorithm.DFT:
                     if (target.width > 1024 || target.height > 1024)
                     {
-                        Debug.LogError("Fourtier Transformer Error: FFT algorithm only supports input dimensions up to 1024. Use FFTSignal8  for larger dimensions.");
+                        Debug.LogError("Fourier Transformer Error: FFT algorithm only supports input dimensions up to 1024. Use FFTSignal8  for larger dimensions.");
                         return;
                     }
                     FourierTransformGPU.DFT(target, false);
@@ -89,7 +89,7 @@ namespace ParkersUtils
                 case FourierTransformerAlgorithm.FFT:
                     if (target.width > 1024 || target.height > 1024)
                     {
-                        Debug.LogError("Fourtier Transformer Error: FFT algorithm only supports input dimensions up to 1024. Use FFTSignal8  for larger dimensions.");
+                        Debug.LogError("Fourier Transformer Error: FFT algorithm only supports input dimensions up to 1024. Use FFTSignal8  for larger dimensions.");
                         return;
                     }
                     FourierTransformGPU.FFT(target, false);

@@ -4,14 +4,28 @@
 #pragma kernel CS_SplitG
 #pragma kernel CS_SplitB
 #pragma kernel CS_SplitRGB
+#pragma kernel CS_SplitSingleChannel
+#pragma kernel CS_SplitDoubleChannel
+#pragma kernel CS_SplitTripleChannel
+#pragma kernel CS_SplitQuadChannel
+
+#define SPLITTER_RED 0
+#define SPLITTER_GREEN 1
+#define SPLITTER_BLUE 2
+#define SPLITTER_ALPHA 3
 
 Texture2D<float4> _Source;
 SamplerState sampler_Source;
 float _Width, _Height;
+int _Channel0;
+int _Channel1;
+int _Channel2;
+int _Channel3;
 
 RWTexture2D<float4> _RedChannel;
 RWTexture2D<float4> _GreenChannel;
 RWTexture2D<float4> _BlueChannel;
+RWTexture2D<float4> _Target;
 
 [numthreads(8,8,1)]
 void CS_SplitR (uint3 id : SV_DispatchThreadID)
@@ -58,3 +72,242 @@ void CS_SplitRGB (uint3 id : SV_DispatchThreadID)
     _GreenChannel[id.xy] = float4(sample.g, 0, 0, 0);
     _BlueChannel[id.xy] = float4(sample.b, 0, 0, 0);
 }
+
+[numthreads(8,8,1)]
+void CS_SplitSingleChannel (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Width || id.y >= _Height) return;
+
+    float2 uv = float2(
+        pixelToTexture(id.x, _Width),
+        pixelToTexture(id.y, _Height)
+    );
+    float4 sample = _Source.SampleLevel(sampler_Source, uv, 0);
+
+    float4 color = float4(0,0,0,1);
+
+    if (_Channel0 == SPLITTER_RED)
+    {
+        color.r = sample.r;
+    }
+    else if(_Channel0 == SPLITTER_GREEN)
+    {
+        color.r = sample.g;
+    }
+    else if (_Channel0 == SPLITTER_BLUE)
+    {
+        color.r = sample.b;
+    }
+    else if (_Channel0 == SPLITTER_ALPHA)
+    {
+        color.r = sample.a;
+    }
+
+    _Target[id.xy] = color;
+}
+
+[numthreads(8,8,1)]
+void CS_SplitDoubleChannel (uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(
+        pixelToTexture(id.x, _Width),
+        pixelToTexture(id.y, _Height)
+    );
+    float4 sample = _Source.SampleLevel(sampler_Source, uv, 0);
+
+    float4 color = float4(0,0,0,0);
+
+    // First Channel
+    if (_Channel0 == SPLITTER_RED)
+    {
+        color.r = sample.r;
+    }
+    else if(_Channel0 == SPLITTER_GREEN)
+    {
+        color.r = sample.g;
+    }
+    else if (_Channel0 == SPLITTER_BLUE)
+    {
+        color.r = sample.b;
+    }
+     else if (_Channel0 == SPLITTER_ALPHA)
+    {
+        color.r = sample.a;
+    }
+
+    // Second Channel
+    if (_Channel1 == SPLITTER_RED)
+    {
+        color.g = sample.r;
+    }
+    else if(_Channel1 == SPLITTER_GREEN)
+    {
+        color.g = sample.g;
+    }
+    else if (_Channel1 == SPLITTER_BLUE)
+    {
+        color.g = sample.b;
+    }
+     else if (_Channel1 == SPLITTER_ALPHA)
+    {
+        color.g = sample.a;
+    }
+
+    _Target[id.xy] = color;
+}
+
+[numthreads(8,8,1)]
+void CS_SplitTripleChannel (uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(
+        pixelToTexture(id.x, _Width),
+        pixelToTexture(id.y, _Height)
+    );
+    float4 sample = _Source.SampleLevel(sampler_Source, uv, 0);
+
+    float4 color = float4(0,0,0,0);
+
+    // First Channel
+    if (_Channel0 == SPLITTER_RED)
+    {
+        color.r = sample.r;
+    }
+    else if(_Channel0 == SPLITTER_GREEN)
+    {
+        color.r = sample.g;
+    }
+    else if (_Channel0 == SPLITTER_BLUE)
+    {
+        color.r = sample.b;
+    }
+     else if (_Channel0 == SPLITTER_ALPHA)
+    {
+        color.r = sample.a;
+    }
+
+    // Second Channel
+    if (_Channel1 == SPLITTER_RED)
+    {
+        color.g = sample.r;
+    }
+    else if(_Channel1 == SPLITTER_GREEN)
+    {
+        color.g = sample.g;
+    }
+    else if (_Channel1 == SPLITTER_BLUE)
+    {
+        color.g = sample.b;
+    }
+     else if (_Channel1 == SPLITTER_ALPHA)
+    {
+        color.g = sample.a;
+    }
+
+    // Third Channel
+    if (_Channel2 == SPLITTER_RED)
+    {
+        color.b = sample.r;
+    }
+    else if(_Channel2 == SPLITTER_GREEN)
+    {
+        color.b = sample.g;
+    }
+    else if (_Channel2 == SPLITTER_BLUE)
+    {
+        color.b = sample.b;
+    }
+     else if (_Channel2 == SPLITTER_ALPHA)
+    {
+        color.b = sample.a;
+    }
+
+    _Target[id.xy] = color;
+}
+
+[numthreads(8,8,1)]
+void CS_SplitQuadChannel (uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(
+        pixelToTexture(id.x, _Width),
+        pixelToTexture(id.y, _Height)
+    );
+    float4 sample = _Source.SampleLevel(sampler_Source, uv, 0);
+
+    float4 color = float4(0,0,0,0);
+
+    // First Channel
+    if (_Channel0 == SPLITTER_RED)
+    {
+        color.r = sample.r;
+    }
+    else if(_Channel0 == SPLITTER_GREEN)
+    {
+        color.r = sample.g;
+    }
+    else if (_Channel0 == SPLITTER_BLUE)
+    {
+        color.r = sample.b;
+    }
+     else if (_Channel0 == SPLITTER_ALPHA)
+    {
+        color.r = sample.a;
+    }
+
+    // Second Channel
+    if (_Channel1 == SPLITTER_RED)
+    {
+        color.g = sample.r;
+    }
+    else if(_Channel1 == SPLITTER_GREEN)
+    {
+        color.g = sample.g;
+    }
+    else if (_Channel1 == SPLITTER_BLUE)
+    {
+        color.g = sample.b;
+    }
+     else if (_Channel1 == SPLITTER_ALPHA)
+    {
+        color.g = sample.a;
+    }
+
+    // Third Channel
+    if (_Channel2 == SPLITTER_RED)
+    {
+        color.b = sample.r;
+    }
+    else if(_Channel2 == SPLITTER_GREEN)
+    {
+        color.b = sample.g;
+    }
+    else if (_Channel2 == SPLITTER_BLUE)
+    {
+        color.b = sample.b;
+    }
+     else if (_Channel2 == SPLITTER_ALPHA)
+    {
+        color.b = sample.a;
+    }
+
+    // Fourth Channel
+    if (_Channel3 == SPLITTER_RED)
+    {
+        color.a = sample.r;
+    }
+    else if(_Channel3 == SPLITTER_GREEN)
+    {
+        color.a = sample.g;
+    }
+    else if (_Channel3 == SPLITTER_BLUE)
+    {
+        color.a = sample.b;
+    }
+     else if (_Channel3 == SPLITTER_ALPHA)
+    {
+        color.a = sample.a;
+    }
+
+    _Target[id.xy] = color;
+}
+
+
